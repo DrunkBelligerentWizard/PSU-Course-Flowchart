@@ -6,7 +6,7 @@ const copyPlugin = require("copy-webpack-plugin");
 module.exports = {
     mode: 'development',
     entry: {
-      weather: './src/js/index.js',
+    catalog_chart: './src/js/index.js',
     },
     output: {
       path: path.resolve(__dirname, "dist"),
@@ -22,7 +22,7 @@ module.exports = {
     module: {
       rules: [	
         { 
-          test: /\.js$/i,
+          test: /\.(js|ts)$/i,
           exclude: /(node_modules)/,
           use: { 
             loader: 'babel-loader', 
@@ -51,7 +51,7 @@ module.exports = {
     plugins: [
       new htmlWebpackPlugin({
         template: path.resolve(__dirname, "./src/index.html"),
-        chunks: ["weather"],
+        chunks: ["catalog_chart"],
         inject: "body",
         filename: "index.html",
       }),

@@ -10,7 +10,7 @@ class Home {
 
         this.init();
 
-        document.querySelector('canvas').style.paddingTop = `${navbarHeight / 4}px`;
+        //document.querySelector('canvas').style.paddingTop = `${navbarHeight / 4}px`;
     }
     init() {
         //document.querySelector('.navbar').innerHTML = navbar(1);
@@ -22,6 +22,7 @@ class Home {
             {
                 "draggingTool.isEnabled": false,
                 "allowSelect": false,
+                padding: 90,
             });
             
         myDiagram.nodeTemplate =

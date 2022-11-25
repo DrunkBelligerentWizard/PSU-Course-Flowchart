@@ -1,9 +1,16 @@
 import './general';
-//import navbar from './navbar';
 
 class Home {
     constructor() {
+        let navbarHeight = document.querySelector('nav').offsetHeight;
+        console.log(navbarHeight);
+        let canvasDiv = document.getElementById('myDiagramDiv');
+        canvasDiv.style.height = `100vh - ${navbarHeight}px`;
+        canvasDiv.style.top = `${navbarHeight}px`;
+
         this.init();
+
+        document.querySelector('canvas').style.paddingTop = `${navbarHeight / 4}px`;
     }
     init() {
         //document.querySelector('.navbar').innerHTML = navbar(1);
@@ -13,13 +20,14 @@ class Home {
         let $ = go.GraphObject.make;
         let myDiagram = $(go.Diagram, "myDiagramDiv",
             {
-                "draggingTool.isEnabled": false
+                "draggingTool.isEnabled": false,
+                "allowSelect": false,
             });
-    
+            
         myDiagram.nodeTemplate =
-            $(go.Node, "Auto",
+            $(go.Node, "Auto",  
                 $(go.Shape, "RoundedRectangle", { fill: "#7289da", strokeCap: "round", stroke: "", strokeWidth: "3",}),
-                $(go.TextBlock, { margin: 8, font: "bold 24px Brush Script MT, cursive"},
+                $(go.TextBlock, { margin: 8, font: "bold 24px Verdana, sans-serif"},
                     new go.Binding("text", "key")),
                     {
             selectionAdornmentTemplate:
@@ -39,7 +47,7 @@ class Home {
             selectionAdornmentTemplate:
               $(go.Adornment,
                 $(go.Shape,
-                  { isPanelMain: true, stroke: null, strokeWidth: 5 }),
+                  { isPanelMain: true, stroke: "#000000", strokeWidth: 5 }),
                 $(go.Shape,
                   { toArrow: "Standard", fill: "#FF000080", stroke: null, scale: 3 })
               )  // end Adornment
@@ -74,6 +82,12 @@ class Home {
                         { key: "ECE 201" },
                         { key: "ECE 202" },
                         { key: "ECE 203" },
+                        { key: "ECE 301" },
+                        { key: "ECE 302" },
+                        { key: "ECE 303" },
+                        { key: "ECE 401" },
+                        { key: "ECE 402" },
+                        { key: "ECE 403" },
     
                     ],
     
@@ -95,6 +109,13 @@ class Home {
                         { from: "ECE 171", to: "ECE 172" },
                         { from: "ECE 172", to: "ECE 201" },
                         { from: "MTH 252", to: "ECE 201" },
+
+                        { from: "ECE 203", to: "ECE 301" },
+                        { from: "ECE 301", to: "ECE 302" },
+                        { from: "ECE 302", to: "ECE 303" },
+                        { from: "ECE 303", to: "ECE 401" },
+                        { from: "ECE 401", to: "ECE 402" },
+                        { from: "ECE 402", to: "ECE 403" },
                     ]
                 }
             );

@@ -7,4 +7,4 @@
  /**
   * Bootstrap JS File
   */
- import bootstrap from 'bootstrap';
+ 

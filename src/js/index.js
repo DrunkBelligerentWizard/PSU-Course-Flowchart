@@ -1,22 +1,37 @@
 import './general';
+import toastr from 'toastr';
+window.bootstrap = require('bootstrap');
 
 class Home {
     constructor() {
+        this.$searchButtonContainer = document.getElementById('searchButtonContainer');
+        this.$SearchDescriptionModal = document.getElementById('searchCourseModal');
+
+        //adjust the framing of the div that will have our diagram
         let navbarHeight = document.querySelector('nav').offsetHeight;
-        console.log(navbarHeight);
-        let canvasDiv = document.getElementById('myDiagramDiv');
-        canvasDiv.style.height = `100vh - ${navbarHeight}px`;
-        canvasDiv.style.top = `${navbarHeight}px`;
+        let $canvasDiv = document.getElementById('myDiagramDiv');
+        $canvasDiv.style.height = `100vh - ${navbarHeight}px`;
+        $canvasDiv.style.top = `${navbarHeight}px`;
+
+        this.$searchButtonContainer.addEventListener('onclick', () => {
+            this.createDescriptionModal()
+          })
+
+       this.myDiagram = this.createDiagram();
+       
 
         this.init();
 
         //document.querySelector('canvas').style.paddingTop = `${navbarHeight / 4}px`;
     }
+
     init() {
-        //document.querySelector('.navbar').innerHTML = navbar(1);
-    
-        go.licenseKey = "54ff40e6b21c28c702d95d76423d38f919a57563c8841da30a0717f6ef086c46729cb87154c19bc7daa84efc492e928d88c56e299344073eb538d6d810e587fde23023b0175b419cb40573939ffa78f1fd6a61f1c3b57ebdd8678cf6";
-    
+        this.addCourseNode()
+        this.createDescriptionModal();
+    }
+
+    createDiagram = () => {
+
         let $ = go.GraphObject.make;
         let myDiagram = $(go.Diagram, "myDiagramDiv",
             {
@@ -120,6 +135,128 @@ class Home {
                     ]
                 }
             );
+        return myDiagram;
+    }
+
+    handleModalSubmit = () => {
+        let userInput = document.getElementById('inputCRN').value;
+        let CRNList = this.genCRNList(userInput);
+
+        requestedCourseList = {}
+
+        CRNList.forEach(CRN => {
+            let requestURL = `https://app.banner.pdx.edu/cpg/offeringServices/browse/?search=${CRN}&dedup=`
+            fetch(CRN)
+            .then()
+        });
+    }
+
+    addCourseNode = () => {
+
+        let CRN = "test";
+        this.myDiagram.model.addNodeData({ key: `${CRN}` });
+        //diagram.requestUpdate();
+    }
+
+    submitSearch = (event) => {
+        event.preventDefault();
+        let userInput = document.getElementById('CRNSearch').value;
+        let CRNList = this.genCRNList(userInput);
+
+        let requestedCourse = {}
+        
+
+        if(CRNList.length == 1) {
+            let requestURL = `https://app.banner.pdx.edu/cpg/offeringServices/browse/?search=${CRNList[0]}&dedup=`
+
+            let defaultSearchButtonHTML = $searchButtonContainer.innerHTML;
+            $searchButtonContainer.innerHTML = `
+            button class="btn btn-primary" type="button" disabled>
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span class="visually-hidden">Loading...</span>
+            </button>
+            `;
+            toastr.info('Retrieving Course Info')
+            fetch(requestURL)
+            .then(response => {
+                requestedCourse['PreviewInfo'] = response;
+                courseSumURL = `https://app.banner.pdx.edu/cpg/courseServices/read/${response.id}`;
+                fetch(courseSumURL)
+                .then(summarry => {
+                    requestedCourse['summaryInfo'] = summarry;
+                    this.createDescriptionModal(requestedCourse);
+                })
+            })
+        }
+        else {
+            if (CRNList.length > 1) {
+                toastr.error(`You may only search for one class at a time\n
+            However, you may add multiple courses at once via the "Add Class" button`)
+            }
+            else {toastr.error('Invalid Course Number')};
+        }
+    }
+    
+    genCRNList = (userInput) => {
+        userInput = userInput.replace(/\s+/g, '')
+        let CRNList = userInput.split(',');
+        let validCRNList = [];
+        
+        CRNList.forEach(CRN => {
+            if (this.validateCRN(CRN)) {
+                validCRNList.append(CRN);
+            }
+        });
+        
+        return validCRNList
+    }
+
+    validateCRN = (userInput) => {
+        const pattern = /^[a-z]{2,3}\s?\d{1,3}/;
+        return pattern.test(userInput);
+    }
+
+    resetDiagram = () => {
+        
+    }
+
+    createDescriptionModal = (requestedCourse) => {
+        // this.$SearchDescriptionModal.innerHTML = `
+        // <div class="modal-dialog">
+        //     <div class="modal-content bg-secondary">
+        //       <div class="modal-header">
+        //         <h3 class="modal-title text-light" id="searchCourseModalTitle">Course Title</h5>
+        //         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        //       </div>
+        //       <div class="modal-body fw-bold">
+        //         <ul class="list-group">
+        //           <li class="list-group-item" id="descriptionCRN">CRN: </li>
+        //           <li class="list-group-item" id="descriptionCredits">Credits: 5</li>
+        //           <li class="list-group-item" id="descriptionDepartment">Department: Mathematics</li>
+        //           <li class="list-group-item" id="courseDescription">Course Description:<div class="fw-normal">lormen ahdwkjadhkjaskjda ashdakjdhjkad kajsd</div></li>
+        //         </ul>
+        //       </div>
+        //       <div class="modal-footer">
+        //         <div class="d-grid gap-2 col-10 mx-auto">
+        //           <div class="row justify-content-evenly">
+        //             <button type="button" class="btn btn-light col-sm-10 me-1">Add Course</button>
+        //           </div>
+        //         </div>
+        //       </div>
+        //     </div>
+        //   </div>
+        // `
+        let myModal = new bootstrap.Modal(this.$SearchDescriptionModal); 
+        myModal.toggle();
+    }
+
+    elementFromHTML(html) {
+        const template = document.createElement('template');
+
+        //sets the generated element's html and trims off white space
+        template.innerHTML = html.trim()
+
+        return template.content.firstElementChild;
     }
 }
 

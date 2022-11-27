@@ -3,4 +3,7 @@ html, body {
     height: 100%; 
     overflow: hidden;
 }
-        
+
+.list-group-item {
+    background-color: #868d93;
+}

@@ -28,21 +28,25 @@
           </li>
         </ul>
         <form class="d-flex">
-          <input class="form-control me-2" type="search" placeholder="Search Class" aria-label="Search">
-          <button class="btn btn-outline-secondary text-nowrap me-2" type="submit">Search</button>
+          <input id="CRNSearch" class="form-control me-2" type="search" placeholder="Search Class" aria-label="Search">
+
+          <div id="searchButtonContainer">
+            <button class="btn btn-lg btn-outline-secondary text-nowrap me-2" type="button">Search</button>
+          </div>
+
+          <!-- Button trigger addCourseModal -->
           <button type="button" class="btn btn-secondary btn-lg text-nowrap" data-bs-target="#addCourseModal" data-bs-toggle="modal">Add Class</button>
-          <!-- Button trigger modal -->
         </form>
       </div>
     </div>
   </nav>
   
-  <!-- Modal -->
+  <!-- AddCourse Modal -->
   <div class="modal fade" id="addCourseModal" tabindex="-1" aria-labelledby="addCourseModal" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content bg-secondary">
         <div class="modal-header">
-          <h5 class="modal-title text-light" id="addCourseModalLabel">Add Courses</h5>
+          <h3 class="modal-title text-light" id="addCourseModalLabel">Add Courses</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -59,6 +63,82 @@
           <div class="d-grid gap-2 col-10 mx-auto">
             <div class="row justify-content-evenly">
               <button type="button" class="btn btn-light col-sm-10 me-1">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--End Modal -->
+
+   <!--Search Course Modal-->
+   <div class="modal fade" id="searchCourseModal" tabindex="-1" aria-labelledby="searchCourseModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content bg-secondary">
+        <div class="modal-header">
+          <h3 class="modal-title text-light" id="searchCourseModalTitle">Calculus II</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body fw-bold">
+          <ul class="list-group">
+            <li class="list-group-item">
+                <div id="descriptionCRN">CRN: MTH 252</div>
+                <div id="descriptionCredits">Credits: 5</div>
+
+            </li>
+            <li class="list-group-item" id="courseProjection">
+              <span>3-Year Course Projection:</span>
+              <div class="pt-sm-2">
+                <table class="table table-secondary table-striped table-bordered border-secondary">
+                  <thead>
+                    <tr class="text-center">
+                      <th scope="col">Year</th>
+                      <th class="w-25" scope="col">Fall</th>
+                      <th class="w-25" scope="col">Winter</th>
+                      <th class="w-25" scope="col">Spring</th>
+                      <th class="w-25" scope="col">Summer</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">2022-2023</th>
+                      <td align="center" class="">Mark</td>
+                      <td align="center" class="">Otto</td>
+                      <td align="center" class="">@mdo</td>
+                      <td align="center" class="">@mdo</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">2023-2024</th>
+                      <td align="center" class="">test</td>
+                      <td align="center" class="text-danger">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="60%" fill="currentColor" class="bi bi-calendar-x" viewBox="0 0 16 16">
+                            <path d="M6.146 7.146a.5.5 0 0 1 .708 0L8 8.293l1.146-1.147a.5.5 0 1 1 .708.708L8.707 9l1.147 1.146a.5.5 0 0 1-.708.708L8 9.707l-1.146 1.147a.5.5 0 0 1-.708-.708L7.293 9 6.146 7.854a.5.5 0 0 1 0-.708z"/>
+                            <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                          </svg>
+                      </td>
+                      <td align="center" class="">@fat</td>
+                      <td align="center" class="">@mdo</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">2024-2025</th>
+                      <td align="center" class="">test</td>
+                      <td align="center" class="">Larry</td>
+                      <td align="center" class="">@twitter</td>
+                      <td align="center" class="">@mdo</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </li>
+            <li class="list-group-item" id="courseDescription">Course Description:<div class="fw-normal">
+              Integral calculus of functions of a single variable, including the Fundamental Theorem of Calculus, numerical integration and applications.  This is the second course in a sequence of three: Mth 251, Mth 252, and Mth 253, which must be taken in sequence. Prerequisite: Mth 251.
+            </div></li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <div class="d-grid gap-2 col-10 mx-auto">
+            <div class="row justify-content-evenly">
+              <button type="button" class="btn btn-light col-sm-10 me-1">Add Course</button>
             </div>
           </div>
         </div>

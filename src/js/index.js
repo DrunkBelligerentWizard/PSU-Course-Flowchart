@@ -4,7 +4,9 @@ window.bootstrap = require('bootstrap');
 
 class Home {
     constructor() {
+        this.$courseForm = document.getElementById('courseForm');
         this.$searchButtonContainer = document.getElementById('searchButtonContainer');
+        this.$searchButton = document.getElementById('searchButton')
         this.$SearchDescriptionModal = document.getElementById('searchCourseModal');
 
         //adjust the framing of the div that will have our diagram
@@ -13,12 +15,11 @@ class Home {
         $canvasDiv.style.height = `100vh - ${navbarHeight}px`;
         $canvasDiv.style.top = `${navbarHeight}px`;
 
-        this.$searchButtonContainer.addEventListener('onclick', () => {
-            this.createDescriptionModal()
+        this.$courseForm.addEventListener('submit', (event) => {
+            this.submitSearch(event)
           })
 
        this.myDiagram = this.createDiagram();
-       
 
         this.init();
 
@@ -26,7 +27,7 @@ class Home {
     }
 
     init() {
-        this.addCourseNode()
+        this.addCourseNode();
         this.createDescriptionModal();
     }
 
@@ -160,7 +161,9 @@ class Home {
 
     submitSearch = (event) => {
         event.preventDefault();
-        let userInput = document.getElementById('CRNSearch').value;
+        let searchBar = document.getElementById('CRNSearch');
+        let userInput = searchBar.value;
+        searchBar.value = "";
         let CRNList = this.genCRNList(userInput);
 
         let requestedCourse = {}
@@ -169,14 +172,14 @@ class Home {
         if(CRNList.length == 1) {
             let requestURL = `https://app.banner.pdx.edu/cpg/offeringServices/browse/?search=${CRNList[0]}&dedup=`
 
-            let defaultSearchButtonHTML = $searchButtonContainer.innerHTML;
-            $searchButtonContainer.innerHTML = `
+            let defaultSearchButtonHTML = this.$searchButtonContainer.innerHTML;
+            this.$searchButtonContainer.innerHTML = `
             button class="btn btn-primary" type="button" disabled>
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             <span class="visually-hidden">Loading...</span>
             </button>
             `;
-            toastr.info('Retrieving Course Info')
+            toastr.info('Retrieving Course Info');
             fetch(requestURL)
             .then(response => {
                 requestedCourse['PreviewInfo'] = response;
@@ -184,9 +187,10 @@ class Home {
                 fetch(courseSumURL)
                 .then(summarry => {
                     requestedCourse['summaryInfo'] = summarry;
+                    console.log(requestedCourse);
                     this.createDescriptionModal(requestedCourse);
                 })
-            })
+            });
         }
         else {
             if (CRNList.length > 1) {
@@ -204,7 +208,7 @@ class Home {
         
         CRNList.forEach(CRN => {
             if (this.validateCRN(CRN)) {
-                validCRNList.append(CRN);
+                validCRNList.push(CRN);
             }
         });
         
@@ -213,7 +217,8 @@ class Home {
 
     validateCRN = (userInput) => {
         const pattern = /^[a-z]{2,3}\s?\d{1,3}/;
-        return pattern.test(userInput);
+        let test = pattern.test(userInput);
+        return test;
     }
 
     resetDiagram = () => {
@@ -221,31 +226,79 @@ class Home {
     }
 
     createDescriptionModal = (requestedCourse) => {
-        // this.$SearchDescriptionModal.innerHTML = `
-        // <div class="modal-dialog">
-        //     <div class="modal-content bg-secondary">
-        //       <div class="modal-header">
-        //         <h3 class="modal-title text-light" id="searchCourseModalTitle">Course Title</h5>
-        //         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        //       </div>
-        //       <div class="modal-body fw-bold">
-        //         <ul class="list-group">
-        //           <li class="list-group-item" id="descriptionCRN">CRN: </li>
-        //           <li class="list-group-item" id="descriptionCredits">Credits: 5</li>
-        //           <li class="list-group-item" id="descriptionDepartment">Department: Mathematics</li>
-        //           <li class="list-group-item" id="courseDescription">Course Description:<div class="fw-normal">lormen ahdwkjadhkjaskjda ashdakjdhjkad kajsd</div></li>
-        //         </ul>
-        //       </div>
-        //       <div class="modal-footer">
-        //         <div class="d-grid gap-2 col-10 mx-auto">
-        //           <div class="row justify-content-evenly">
-        //             <button type="button" class="btn btn-light col-sm-10 me-1">Add Course</button>
-        //           </div>
-        //         </div>
-        //       </div>
-        //     </div>
-        //   </div>
-        // `
+        this.$SearchDescriptionModal.innerHTML = `
+         <div class="modal-dialog">
+           <div class="modal-content bg-secondary">
+             <div class="modal-header">
+               <h3 class="modal-title text-light" id="searchCourseModalTitle">Calculus II</h5>
+               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+             </div>
+             <div class="modal-body fw-bold">
+               <ul class="list-group">
+                 <li class="list-group-item">
+                     <div id="descriptionCRN">CRN: MTH 252</div>
+                     <div id="descriptionCredits">Credits: 5</div>
+                     <div id="descriptionPreqs">Prerequisites: MTH 251</div>
+                 </li>
+                 <li class="list-group-item" id="courseProjection">
+                   <span>3-Year Course Projection:</span>
+                   <div class="pt-sm-2">
+                     <table class="table table-secondary table-striped table-bordered border-secondary">
+                       <thead>
+                         <tr class="text-center">
+                           <th scope="col">Year</th>
+                           <th class="w-25" scope="col">Fall</th>
+                           <th class="w-25" scope="col">Winter</th>
+                           <th class="w-25" scope="col">Spring</th>
+                           <th class="w-25" scope="col">Summer</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         <tr>
+                           <th scope="row">2022-2023</th>
+                           <td align="center" class="">Mark</td>
+                           <td align="center" class="">Otto</td>
+                           <td align="center" class="">@mdo</td>
+                           <td align="center" class="">@mdo</td>
+                         </tr>
+                         <tr>
+                           <th scope="row">2023-2024</th>
+                           <td align="center" class="">test</td>
+                           <td align="center" class="text-danger">
+                               <svg xmlns="http://www.w3.org/2000/svg" width="60%" fill="currentColor" class="bi bi-calendar-x" viewBox="0 0 16 16">
+                                 <path d="M6.146 7.146a.5.5 0 0 1 .708 0L8 8.293l1.146-1.147a.5.5 0 1 1 .708.708L8.707 9l1.147 1.146a.5.5 0 0 1-.708.708L8 9.707l-1.146 1.147a.5.5 0 0 1-.708-.708L7.293 9 6.146 7.854a.5.5 0 0 1 0-.708z"/>
+                                 <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                               </svg>
+                           </td>
+                           <td align="center" class="">@fat</td>
+                           <td align="center" class="">@mdo</td>
+                         </tr>
+                         <tr>
+                           <th scope="row">2024-2025</th>
+                           <td align="center" class="">test</td>
+                           <td align="center" class="">Larry</td>
+                           <td align="center" class="">@twitter</td>
+                           <td align="center" class="">@mdo</td>
+                         </tr>
+                       </tbody>
+                     </table>
+                   </div>
+                 </li>
+                 <li class="list-group-item" id="courseDescription">Course Description:<div class="fw-normal">
+                   Integral calculus of functions of a single variable, including the Fundamental Theorem of Calculus, numerical integration and applications.  This is the second course in a sequence of three: Mth 251, Mth 252, and Mth 253, which must be taken in sequence. Prerequisite: Mth 251.
+                 </div></li>
+               </ul>
+             </div>
+             <div class="modal-footer">
+               <div class="d-grid gap-2 col-10 mx-auto">
+                 <div class="row justify-content-evenly">
+                   <button type="button" class="btn btn-light col-sm-10 me-1">Add Course</button>
+                 </div>
+               </div>
+             </div>
+           </div>
+         </div>
+        `
         let myModal = new bootstrap.Modal(this.$SearchDescriptionModal); 
         myModal.toggle();
     }

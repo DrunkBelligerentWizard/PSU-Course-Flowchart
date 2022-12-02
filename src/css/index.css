@@ -7,3 +7,7 @@ html, body {
 .list-group-item {
     background-color: #868d93;
 }
+
+.toast {
+    top: 15px;
+}

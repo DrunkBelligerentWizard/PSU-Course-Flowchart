@@ -8,7 +8,8 @@ class Home {
     this.$courseForm = document.getElementById('courseForm');
     this.$searchButtonContainer = document.getElementById('searchButtonContainer');
     this.$searchButton = document.getElementById('searchButton')
-    this.$SearchDescriptionModal = document.getElementById('searchCourseModal');
+    this.$searchDescriptionModal = document.getElementById('searchCourseModal');
+    this.$addPrereqsModal = document.getElementById('prereqModal');
 
     //adjust the framing of the div that will have our diagram
     let navbarHeight = document.querySelector('nav').offsetHeight;
@@ -47,8 +48,6 @@ class Home {
     })
 
     this.myDiagram = this.createDiagram();
-
-    this.addCourseNode();
   }
 
 
@@ -176,10 +175,20 @@ class Home {
     });
   }
 
-  addCourseNode = () => {
+  addCourse = (courseCode, prereq) => {
+    this.myDiagram.model.addNodeData({ key: `${courseCode}` });
 
-    let CRN = "test";
-    this.myDiagram.model.addNodeData({ key: `${CRN}` });
+    for(const course in prereq) {
+      let charCount = 0;
+      const pattern = /\[a-z]/;
+      for (const char in prereq[course]) {
+        if (pattern.test(prereq[course][char])) charCount++;
+      }
+      let preReqDisplay = prereq[course].slice(0, charCount) + " " + prereq[course].slice(charCount);
+      this.myDiagram.model.addLinkData({from: courseCode, to: preReqDisplay});
+    }
+
+    console.log(this.myDiagram.model);
     //diagram.requestUpdate();
   }
 
@@ -262,7 +271,7 @@ class Home {
   }
 
   validateCRN = (userInput) => {
-    const pattern = /^[A-Z]{2,4}\s?\d{1,3}?/;
+    const pattern = /^[a-z]{2,4}\s?\d{1,3}$/i;
     let test = pattern.test(userInput);
     return test;
   }
@@ -300,7 +309,7 @@ class Home {
   }
 
   createDescriptionModal = (requestedCourse) => {
-    this.$SearchDescriptionModal.innerHTML = `
+    this.$searchDescriptionModal.innerHTML = `
          <div class="modal-dialog">
            <div class="modal-content bg-secondary">
              <div class="modal-header">
@@ -359,13 +368,14 @@ class Home {
              <div class="modal-footer">
                <div class="d-grid gap-2 col-10 mx-auto">
                  <div class="row justify-content-evenly">
-                   <button type="button" class="btn btn-light col-sm-10 me-1">Add Course</button>
+                   <button id="addButton" type="button" class="btn btn-light col-sm-10 me-1">Add Course</button>
                  </div>
                </div>
              </div>
            </div>
          </div>
         `
+    
     for (const year in requestedCourse["years"]) {
       for (const term in requestedCourse["years"][year]["terms"]) {
         const currentTerm = requestedCourse["years"][year]["terms"][term];
@@ -391,8 +401,104 @@ class Home {
       }
     }
 
-    let myModal = new bootstrap.Modal(this.$SearchDescriptionModal);
-    myModal.toggle();
+    let searchModal = new bootstrap.Modal(this.$searchDescriptionModal);
+
+    let addButton = document.getElementById('addButton')
+    
+    addButton.addEventListener('click', () => {
+      this.addPrereqModal([requestedCourse], searchModal)
+    })
+
+    searchModal.toggle();
+  }
+
+  addPrereqModal = (courseList, parentModal) => {
+    this.$addPrereqsModal.innerHTML = `
+    <div class="modal-dialog">
+      <div class="modal-content bg-secondary">
+        <div class="modal-header">
+          <h3 class="modal-title text-light" id="addCourseModalLabel">Add Prerequisites</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div id="courseField" class="form-group d-grid col-12">
+              
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <div class="d-grid gap-2 col-10 mx-auto">
+            <div class="row justify-content-evenly">
+              <button id="prereqAddButton" type="button" class="btn btn-light col-sm-10 me-1">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    `
+    let courseField = document.getElementById('courseField');
+    let prereqInsertList = [];
+
+    for (const course in courseList) {
+      let prereqInsert = this.elementFromHTML(`
+      <div class="row justify-content-evenly my-1">
+          <label class="col-sm-3 text-light" for="inputCRN">${courseList[course].courseCode}:</label>
+            <input id="${courseList[course].subjectCode}${courseList[course].courseDigit}" class="form-conntrol col-sm-8 rounded border-0 ml-n5" placeholder="Ex: MTH 252, MTH 253, ECE 101" id="inputCRN" type="text">
+      </div>
+      `)
+      courseField.append(prereqInsert);
+      let prereqInputBox = document.getElementById(`${courseList[course].subjectCode}${courseList[course].courseDigit}`)
+
+      prereqInputBox.addEventListener("keydown", function(event) {
+        if (event.key == "Enter") {
+            event.preventDefault();
+            prereqAddButton.click();
+        }
+        });
+
+      prereqInsertList.push(prereqInputBox);
+    }
+
+    let prereqModal = new bootstrap.Modal(this.$addPrereqsModal);
+
+    let prereqAddButton = document.getElementById('prereqAddButton')
+    
+    prereqAddButton.addEventListener('click', () => {
+      let validPrereqs = true;
+      for (const inputField in prereqInsertList) {
+        let prereqList = prereqInsertList[inputField].value;
+        courseList[inputField]["prereqs"] = [];
+
+        if (prereqList) {
+          prereqList = prereqList.replace(/\s+/g, '');
+          prereqList = prereqList.split(',');
+
+          for (const prereq in prereqList) {
+            if (!this.validateCRN(prereqList[prereq])) {
+              validPrereqs = false;
+              toastr.error(`${prereqList[prereq]} is not a valid CRN`);
+            }
+            else {
+              courseList[inputField]["prereqs"].push(`${prereqList[prereq]}`);
+            }
+          }
+        }
+      }
+      if (validPrereqs) {
+        this.addCourses(courseList, prereqModal);
+      }
+    })
+    parentModal.toggle();
+    prereqModal.toggle();
+  }
+
+  addCourses = (courseList, prereqModal) => {
+    for (const course in courseList) {
+      this.addCourse(courseList[course].courseCode, courseList[course].prereqs);
+      toastr.success(`${courseList[course].courseCode} added!`)
+    }
+    prereqModal.toggle();
   }
 
   elementFromHTML(html) {

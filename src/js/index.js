@@ -5,6 +5,7 @@ window.bootstrap = require('bootstrap');
 
 class Home {
   constructor() {
+    this.$resetButton = document.getElementById('reset');
     this.$courseForm = document.getElementById('courseForm');
     this.$searchButtonContainer = document.getElementById('searchButtonContainer');
     this.$searchButton = document.getElementById('searchButton')
@@ -17,6 +18,7 @@ class Home {
     $canvasDiv.style.height = `100vh - ${navbarHeight}px`;
     $canvasDiv.style.top = `${navbarHeight}px`;
 
+    this.myDiagram;
 
     this.init();
 
@@ -42,6 +44,8 @@ class Home {
       "showMethod": "fadeIn",
       "hideMethod": "fadeOut"
     }
+
+    this.$resetButton.onclick = this.resetDiagram;
 
     this.$courseForm.addEventListener('submit', (event) => {
       this.submitSearch(event)
@@ -102,61 +106,8 @@ class Home {
     myDiagram.model =
       $(go.GraphLinksModel,
         {
-          nodeDataArray: [
-            { key: "MTH 111" },
-            { key: "MTH 112" },
-            { key: "MTH 231" },
-            { key: "MTH 251" },
-            { key: "MTH 252" },
-            { key: "MTH 253" },
-            { key: "MTH 260" },
-
-            { key: "ECE 101" },
-            { key: "ECE 102" },
-            { key: "ECE 103" },
-            { key: "ECE 171" },
-            { key: "ECE 172" },
-            { key: "ECE 201" },
-            { key: "ECE 202" },
-            { key: "ECE 203" },
-            { key: "ECE 301" },
-            { key: "ECE 302" },
-            { key: "ECE 303" },
-            { key: "ECE 401" },
-            { key: "ECE 402" },
-            { key: "ECE 403" },
-            { key: "ECE 404" },
-
-          ],
-
-          linkDataArray: [
-            { from: "MTH 111", to: "MTH 112" },
-            { from: "MTH 112", to: "MTH 231" },
-            { from: "MTH 112", to: "MTH 251" },
-            { from: "MTH 251", to: "MTH 252" },
-            { from: "MTH 252", to: "MTH 260" },
-            { from: "MTH 252", to: "MTH 253" },
-
-            { from: "ECE 101", to: "ECE 102" },
-            { from: "ECE 102", to: "ECE 103" },
-            { from: "ECE 103", to: "ECE 201" },
-            { from: "ECE 201", to: "ECE 202" },
-            { from: "ECE 202", to: "ECE 203" },
-            { from: "MTH 111", to: "ECE 101" },
-            { from: "MTH 111", to: "ECE 171" },
-            { from: "ECE 171", to: "ECE 172" },
-            { from: "ECE 172", to: "ECE 201" },
-            { from: "MTH 252", to: "ECE 201" },
-
-            { from: "ECE 203", to: "ECE 301" },
-            { from: "ECE 301", to: "ECE 302" },
-            { from: "ECE 302", to: "ECE 303" },
-            { from: "ECE 303", to: "ECE 401" },
-            { from: "ECE 401", to: "ECE 402" },
-            { from: "ECE 402", to: "ECE 403" },
-            { from: "ECE 403", to: "ECE 402" },
-            { from: "ECE 403", to: "ECE 404" },
-          ]
+          nodeDataArray: [],
+          linkDataArray: []
         }
       );
     return myDiagram;
@@ -180,15 +131,22 @@ class Home {
 
     for(const course in prereq) {
       let charCount = 0;
-      const pattern = /\[a-z]/;
+      const pattern = /[A-Z]/i;
       for (const char in prereq[course]) {
         if (pattern.test(prereq[course][char])) charCount++;
       }
-      let preReqDisplay = prereq[course].slice(0, charCount) + " " + prereq[course].slice(charCount);
-      this.myDiagram.model.addLinkData({from: courseCode, to: preReqDisplay});
+      let prereqDisplay = "";
+      if (prereq[course].slice(charCount).length <= 2) {
+        prereqDisplay = prereq[course].slice(0, charCount) + " 0" + prereq[course].slice(charCount);
+      }
+      else {
+        prereqDisplay = prereq[course].slice(0, charCount) + " " + prereq[course].slice(charCount);
+      }
+      this.myDiagram.model.addLinkData({from: `${prereqDisplay}`, to: `${courseCode}`});
     }
 
-    console.log(this.myDiagram.model);
+    console.log(this.myDiagram.model.linkDataArray);
+    console.log(this.myDiagram.model.nodeDataArray);
     //diagram.requestUpdate();
   }
 
@@ -305,7 +263,8 @@ class Home {
   }
 
   resetDiagram = () => {
-
+    this.myDiagram.model.nodeDataArray = [];
+    this.myDiagram.model.linkDataArray = [];
   }
 
   createDescriptionModal = (requestedCourse) => {
@@ -480,7 +439,7 @@ class Home {
               toastr.error(`${prereqList[prereq]} is not a valid CRN`);
             }
             else {
-              courseList[inputField]["prereqs"].push(`${prereqList[prereq]}`);
+              courseList[inputField]["prereqs"].push(`${prereqList[prereq].toUpperCase()}`);
             }
           }
         }

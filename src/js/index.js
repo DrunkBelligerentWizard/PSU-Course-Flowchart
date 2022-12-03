@@ -9,6 +9,7 @@ class Home {
     this.$courseForm = document.getElementById('courseForm');
     this.$searchButtonContainer = document.getElementById('searchButtonContainer');
     this.$searchButton = document.getElementById('searchButton')
+    this.$addCourseModal = document.getElementById('addCourseModal');
     this.$searchDescriptionModal = document.getElementById('searchCourseModal');
     this.$addPrereqsModal = document.getElementById('prereqModal');
 
@@ -50,6 +51,12 @@ class Home {
     this.$courseForm.addEventListener('submit', (event) => {
       this.submitSearch(event)
     })
+
+    let courseAddButton = document.getElementById('coursesAddButton')
+
+    courseAddButton.addEventListener('click', () => {
+      this.handleModalSubmit();
+    });
 
     this.myDiagram = this.createDiagram();
   }
@@ -106,30 +113,113 @@ class Home {
     myDiagram.model =
       $(go.GraphLinksModel,
         {
-          nodeDataArray: [],
-          linkDataArray: []
+          nodeDataArray: [
+            {key: 'Example Diagram. Hit "Reset" to clear!\nUse "ctl + +" or "ctrl + -" to zoom or the mouse to pan'},
+
+            {key: 'MTH 111'},
+            {key: 'MTH 112'},
+            {key: 'MTH 251'},
+            {key: 'MTH 252'},
+            {key: 'MTH 253'},
+            {key: 'MTH 254'},
+            {key: 'MTH 255'},
+            {key: 'MTH 261'},
+
+            {key: 'ECE 101'},
+            {key: 'ECE 102'},
+            {key: 'ECE 103'},
+            {key: 'ECE 211'},
+            {key: 'ECE 212'},
+            {key: 'ECE 171'},
+            {key: 'ECE 172'},
+          ],
+
+          linkDataArray: [
+            {to: 'MTH 111', from: 'Example Diagram. Hit "Reset" to clear!\nUse "ctl + +" or "ctrl + -" to zoom or the mouse to pan'},
+            {to: 'MTH 112', from: 'MTH 111'},
+            {to: 'MTH 251', from: 'MTH 112'},
+            {to: 'MTH 252', from: 'MTH 251'},
+            {to: 'MTH 253', from: 'MTH 252'},
+            {to: 'MTH 254', from: 'MTH 253'},
+            {to: 'MTH 255', from: 'MTH 254'},
+            {to: 'MTH 261', from: 'MTH 252'},
+
+            {to: 'ECE 101', from: 'MTH 111'},
+            {to: 'ECE 102', from: 'ECE 101'},
+            {to: 'ECE 103', from: 'ECE 102'},
+            {to: 'ECE 211', from: 'ECE 103'},
+            {to: 'ECE 211', from: 'MTH 252'},
+            {to: 'ECE 212', from: 'ECE 211'},
+
+            {to: 'ECE 171', from: 'MTH 111'},
+            {to: 'ECE 172', from: 'ECE 171'},
+            {to: 'ECE 211', from: 'ECE 172'},
+          ]
         }
       );
     return myDiagram;
   }
 
-  handleModalSubmit = () => {
-    let userInput = document.getElementById('inputCRN').value;
-    let CRNList = this.genCRNList(userInput);
+  handleModalSubmit = async () => {
+    let userInput = document.getElementById('inputCRN');
+    let CRNList = this.genCRNList(userInput.value.toUpperCase());
+    userInput.value = "";
 
-    requestedCourseList = {}
+    
 
-    CRNList.forEach(CRN => {
-      let requestURL = `https://app.banner.pdx.edu/cpg/offeringServices/browse/?search=${CRN}&dedup=`
-      fetch(CRN)
-        .then()
-    });
+    let requestedCourseList = [];
+
+    if (CRNList.length > 0) {
+      let requestElements = this.getRequestElements(CRNList);
+
+      for (const course in requestElements) {
+        let requestURL = `https://raw.githubusercontent.com/DrunkBelligerentWizard/PSU-Courses/main/${requestElements[course][0]}.json`
+        //toastr.info('Retrieving Course Info');
+        await fetch(requestURL)
+          .then(response => {
+            if (!response.ok) {
+              toastr.error(`${requestElements[course][0]} ${requestElements[course][1]} is an invalid course code`)
+              throw new Error('invalid request URL')
+            }
+            else {
+              response = response.json()
+                .then(courseList => {
+                  let courseFound = false;
+                  for (const key in courseList) {
+                    if (courseList[key]["dist"].length > 0 && courseList[key]["dist"][0]["courseDigit"] == requestElements[course][1]) {
+                      courseFound = true;
+                      requestedCourseList.push(courseList[key]["dist"][0]);
+                      break;
+                    }
+                  }
+                  if (!courseFound) {
+                    toastr.error(`Could not find ${requestElements[course][0]} ${requestElements[course][1]}`);
+                  }
+                  else if (requestedCourseList.length == requestElements.length) {
+                    let addCoursesModal = new bootstrap.Modal(this.$addCourseModal);
+                    
+              
+                    this.addPrereqModal(requestedCourseList, addCoursesModal, false)
+                  }
+                })
+            }
+          },
+            () => { throw new Error('Invalid Course Subject Identifier') })
+          .catch((error) => {
+            //console.error('Error:', error);
+            toastr.error('Could not find requested course');
+          });
+      }
+    }
+    else {
+      toastr.error(`No valid courses inputed`);
+    }
   }
 
   addCourse = (courseCode, prereq) => {
     this.myDiagram.model.addNodeData({ key: `${courseCode}` });
 
-    for(const course in prereq) {
+    for (const course in prereq) {
       let charCount = 0;
       const pattern = /[A-Z]/i;
       for (const char in prereq[course]) {
@@ -142,7 +232,7 @@ class Home {
       else {
         prereqDisplay = prereq[course].slice(0, charCount) + " " + prereq[course].slice(charCount);
       }
-      this.myDiagram.model.addLinkData({from: `${prereqDisplay}`, to: `${courseCode}`});
+      this.myDiagram.model.addLinkData({ from: `${prereqDisplay}`, to: `${courseCode}` });
     }
 
     console.log(this.myDiagram.model.linkDataArray);
@@ -334,7 +424,7 @@ class Home {
            </div>
          </div>
         `
-    
+
     for (const year in requestedCourse["years"]) {
       for (const term in requestedCourse["years"][year]["terms"]) {
         const currentTerm = requestedCourse["years"][year]["terms"][term];
@@ -363,15 +453,15 @@ class Home {
     let searchModal = new bootstrap.Modal(this.$searchDescriptionModal);
 
     let addButton = document.getElementById('addButton')
-    
+
     addButton.addEventListener('click', () => {
       this.addPrereqModal([requestedCourse], searchModal)
-    })
+    });
 
     searchModal.toggle();
   }
 
-  addPrereqModal = (courseList, parentModal) => {
+  addPrereqModal = (courseList, parentModal, toggleParrent = true) => {
     this.$addPrereqsModal.innerHTML = `
     <div class="modal-dialog">
       <div class="modal-content bg-secondary">
@@ -409,12 +499,12 @@ class Home {
       courseField.append(prereqInsert);
       let prereqInputBox = document.getElementById(`${courseList[course].subjectCode}${courseList[course].courseDigit}`)
 
-      prereqInputBox.addEventListener("keydown", function(event) {
+      prereqInputBox.addEventListener("keydown", function (event) {
         if (event.key == "Enter") {
-            event.preventDefault();
-            prereqAddButton.click();
+          event.preventDefault();
+          prereqAddButton.click();
         }
-        });
+      });
 
       prereqInsertList.push(prereqInputBox);
     }
@@ -422,7 +512,7 @@ class Home {
     let prereqModal = new bootstrap.Modal(this.$addPrereqsModal);
 
     let prereqAddButton = document.getElementById('prereqAddButton')
-    
+
     prereqAddButton.addEventListener('click', () => {
       let validPrereqs = true;
       for (const inputField in prereqInsertList) {
@@ -448,7 +538,9 @@ class Home {
         this.addCourses(courseList, prereqModal);
       }
     })
-    parentModal.toggle();
+    if(toggleParrent) {
+      parentModal.toggle();
+    }
     prereqModal.toggle();
   }
 

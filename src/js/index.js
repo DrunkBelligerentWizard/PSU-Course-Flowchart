@@ -58,6 +58,15 @@ class Home {
     this.$courseAddButton.addEventListener('click', () => {
       this.handleModalSubmit();
     });
+    
+    let courseInputBox = document.getElementById('inputCRN');
+
+    courseInputBox.addEventListener("keydown", function (event) {
+      if (event.key == "Enter") {
+        event.preventDefault();
+        document.getElementById('coursesAddButton').click();
+      }
+    });
 
     //creates the flowchart and it's canvas
     this.myDiagram = this.createDiagram();
@@ -199,7 +208,7 @@ class Home {
                     }
                   }
                   if (!courseFound) {
-                    toastr.error(`Could not find ${requestElements[course][0]} ${requestElements[course][1]}`);
+                    toastr.error(`Could not find ${requestElements[course][0]} ${requestElements[course][1]}. Try search again without ${requestElements[course][0]} ${requestElements[course][1]}`);
                   }
                   else if (requestedCourseList.length == requestElements.length) {
                     let addCoursesModal = new bootstrap.Modal(this.$addCourseModal);
@@ -515,8 +524,8 @@ class Home {
     for (const course in courseList) {
       let prereqInsert = this.elementFromHTML(`
       <div class="row justify-content-evenly my-1">
-          <label class="col-sm-3 text-light" for="inputCRN">${courseList[course].courseCode}:</label>
-            <input id="${courseList[course].subjectCode}${courseList[course].courseDigit}" class="form-conntrol col-sm-8 rounded border-0 ml-n5" placeholder="Ex: MTH 252, MTH 253, ECE 101" id="inputCRN" type="text">
+          <label class="col-sm-3 text-light" for="${courseList[course].subjectCode}${courseList[course].courseDigit}">${courseList[course].courseCode}:</label>
+            <input id="${courseList[course].subjectCode}${courseList[course].courseDigit}" class="form-conntrol col-sm-8 rounded border-0 ml-n5" placeholder="Ex: MTH 252, MTH 253, ECE 101" type="text">
       </div>
       `)
       courseField.append(prereqInsert);

@@ -5,6 +5,7 @@ window.bootstrap = require('bootstrap');
 
 class Home {
   constructor() {
+    //grab page elements
     this.$resetButton = document.getElementById('reset');
     this.$courseForm = document.getElementById('courseForm');
     this.$searchButtonContainer = document.getElementById('searchButtonContainer');
@@ -12,8 +13,9 @@ class Home {
     this.$addCourseModal = document.getElementById('addCourseModal');
     this.$searchDescriptionModal = document.getElementById('searchCourseModal');
     this.$addPrereqsModal = document.getElementById('prereqModal');
+    this.$courseAddButton = document.getElementById('coursesAddButton');
 
-    //adjust the framing of the div that will have our diagram
+    //adjust the framing of the div that will have our diagram to be the size of the page
     let navbarHeight = document.querySelector('nav').offsetHeight;
     let $canvasDiv = document.getElementById('myDiagramDiv');
     $canvasDiv.style.height = `100vh - ${navbarHeight}px`;
@@ -27,7 +29,7 @@ class Home {
   }
 
   init() {
-
+    //set toaster alert settings
     toastr.options = {
       "closeButton": false,
       "debug": false,
@@ -46,22 +48,23 @@ class Home {
       "hideMethod": "fadeOut"
     }
 
+    //add click handlers to buttons that are hard coded into the html
     this.$resetButton.onclick = this.resetDiagram;
 
     this.$courseForm.addEventListener('submit', (event) => {
-      this.submitSearch(event)
+      this.submitSearch(event);
     })
 
-    let courseAddButton = document.getElementById('coursesAddButton')
-
-    courseAddButton.addEventListener('click', () => {
+    this.$courseAddButton.addEventListener('click', () => {
       this.handleModalSubmit();
     });
 
+    //creates the flowchart and it's canvas
     this.myDiagram = this.createDiagram();
   }
 
-
+  /*the function that creates the flowchart and sets all the settings
+  also sets the default flowchart*/
   createDiagram = () => {
 
     let $ = go.GraphObject.make;
@@ -160,6 +163,9 @@ class Home {
     return myDiagram;
   }
 
+  /*handles submission of the data from the modal that pops up when you click the "Add Courses" button
+  validates the corse numbers and runs fetch requests for each.
+  then creates the modal that handles adding prereqs to courses*/
   handleModalSubmit = async () => {
     let userInput = document.getElementById('inputCRN');
     let CRNList = this.genCRNList(userInput.value.toUpperCase());
@@ -216,6 +222,8 @@ class Home {
     }
   }
 
+  /*The method used to add an individual course node and it's prequisite links
+  to the flowchart*/
   addCourse = (courseCode, prereq) => {
     this.myDiagram.model.addNodeData({ key: `${courseCode}` });
 
@@ -240,6 +248,10 @@ class Home {
     //diagram.requestUpdate();
   }
 
+  /*Handles searching for an individual class via the search bar
+  gives more detailed information such as when the course is offered
+  does almost the exact same process as handle modal submit except it brings up a course descriptional modal
+  instead of the prerequisite modal*/
   submitSearch = (event) => {
     event.preventDefault();
     let searchBar = document.getElementById('CRNSearch');
@@ -304,11 +316,14 @@ class Home {
     }
   }
 
+
+  /*formats user input by removing space and splitting at commas to make an array of CRNs*/
   genCRNList = (userInput) => {
     userInput = userInput.replace(/\s+/g, '')
     let CRNList = userInput.split(',');
     let validCRNList = [];
 
+    //validates that each CRN is properly formatted and adds it to a list of valid CRNS if it is
     CRNList.forEach(CRN => {
       if (this.validateCRN(CRN)) {
         validCRNList.push(CRN);
@@ -318,12 +333,14 @@ class Home {
     return validCRNList
   }
 
+  /*checks to see if the provided input is a valid CRN format*/
   validateCRN = (userInput) => {
     const pattern = /^[a-z]{2,4}\s?\d{1,3}$/i;
     let test = pattern.test(userInput);
     return test;
   }
 
+  /*splits an array of CRNs into an array of pairs including the Course department identifier and the specific number*/
   getRequestElements = (CRNList) => {
     let requestArr = [];
     CRNList.forEach(CRN => {
@@ -342,21 +359,27 @@ class Home {
     return requestArr;
   }
 
+
+  //checks if the provided character is a letter
   isLetter = (char) => {
     const pattern = /[A-Z]/i;
     return pattern.test(char);
   }
 
+  //checks if the provided character is a digit
   isDigit = (char) => {
     const pattern = /\d/;
     return pattern.test(char);
   }
 
+  /*Clears the flowchart's nodes and links, effectively reseting it to a blank slate*/
   resetDiagram = () => {
     this.myDiagram.model.nodeDataArray = [];
     this.myDiagram.model.linkDataArray = [];
   }
 
+  /* dynamically creates the modal that shows the user additional course information for courses searched via
+  the search bar. Also allows the user to add that course by creating the same preq modal used in handleModalSubmit*/
   createDescriptionModal = (requestedCourse) => {
     this.$searchDescriptionModal.innerHTML = `
          <div class="modal-dialog">
@@ -544,6 +567,8 @@ class Home {
     prereqModal.toggle();
   }
 
+  /*takes in a list of courses to be added to the flowchart and lets the user know when they've been added
+  toggles the prequisite modal that called addCourses after adding all the courses*/
   addCourses = (courseList, prereqModal) => {
     for (const course in courseList) {
       this.addCourse(courseList[course].courseCode, courseList[course].prereqs);
@@ -552,6 +577,7 @@ class Home {
     prereqModal.toggle();
   }
 
+  /*returns an html element from the argument that should include the html as a string*/
   elementFromHTML(html) {
     const template = document.createElement('template');
 
@@ -562,6 +588,6 @@ class Home {
   }
 }
 
-
+/*creates the home object when the page loads*/
 let home;
 window.onload = () => { new Home(); };
